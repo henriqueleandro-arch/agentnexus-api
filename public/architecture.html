@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentNexus — Architecture</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232733;
+      --border: #2d3244;
+      --text: #e4e7ef;
+      --text2: #8b92a8;
+      --text3: #5a6178;
+      --accent: #6c5ce7;
+      --accent-glow: rgba(108,92,231,0.25);
+      --green: #00d2a0;
+      --green-glow: rgba(0,210,160,0.2);
+      --blue: #4facfe;
+      --blue-glow: rgba(79,172,254,0.2);
+      --orange: #ffa726;
+      --orange-glow: rgba(255,167,38,0.2);
+      --pink: #ee5a8f;
+      --pink-glow: rgba(238,90,143,0.2);
+      --cyan: #00e5ff;
+      --cyan-glow: rgba(0,229,255,0.2);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(108,92,231,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108,92,231,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .page { position: relative; z-index: 1; }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 48px 20px 20px;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 20px;
+    }
+    .header-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, var(--blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .header p {
+      font-size: 16px;
+      color: var(--text2);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 16px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .back-link:hover { background: var(--accent-glow); }
+
+    /* Diagram container */
+    .diagram {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+      position: relative;
+    }
+
+    /* SVG connectors layer */
+    .connectors {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Cloud regions */
+    .cloud-region {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 2;
+      background: var(--surface);
+    }
+    .cloud-region::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px; right: -1px; bottom: -1px;
+      border-radius: 16px;
+      pointer-events: none;
+    }
+    .region-alibaba::before {
+      background: linear-gradient(135deg, rgba(255,167,38,0.08), transparent 60%);
+      border-radius: 16px;
+    }
+    .region-tidb::before {
+      background: linear-gradient(135deg, rgba(79,172,254,0.08), transparent 60%);
+      border-radius: 16px;
+    }
+    .region-ai::before {
+      background: linear-gradient(135deg, rgba(238,90,143,0.08), transparent 60%);
+      border-radius: 16px;
+    }
+    .region-client::before {
+      background: linear-gradient(135deg, rgba(0,210,160,0.08), transparent 60%);
+      border-radius: 16px;
+    }
+
+    .region-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .region-label .icon { font-size: 16px; }
+    .label-alibaba { background: var(--orange-glow); color: var(--orange); border: 1px solid rgba(255,167,38,0.2); }
+    .label-tidb { background: var(--blue-glow); color: var(--blue); border: 1px solid rgba(79,172,254,0.2); }
+    .label-ai { background: var(--pink-glow); color: var(--pink); border: 1px solid rgba(238,90,143,0.2); }
+    .label-client { background: var(--green-glow); color: var(--green); border: 1px solid rgba(0,210,160,0.2); }
+
+    .region-subtitle {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: -14px;
+      margin-bottom: 18px;
+    }
+
+    /* Component grid */
+    .components {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .component {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .component:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .comp-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .comp-icon.orange { background: var(--orange-glow); }
+    .comp-icon.blue { background: var(--blue-glow); }
+    .comp-icon.green { background: var(--green-glow); }
+    .comp-icon.accent { background: var(--accent-glow); }
+    .comp-icon.pink { background: var(--pink-glow); }
+    .comp-icon.cyan { background: var(--cyan-glow); }
+
+    .comp-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .comp-detail {
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+    .comp-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    .tag-port { background: var(--green-glow); color: var(--green); }
+    .tag-protocol { background: var(--blue-glow); color: var(--blue); }
+    .tag-engine { background: var(--accent-glow); color: var(--accent); }
+    .tag-model { background: var(--pink-glow); color: var(--pink); }
+    .tag-infra { background: var(--orange-glow); color: var(--orange); }
+
+    /* Connection arrows between regions */
+    .flow-arrows {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin: -12px 0;
+      position: relative;
+      z-index: 3;
+    }
+    .flow-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .arrow-line {
+      width: 2px;
+      height: 24px;
+      background: linear-gradient(to bottom, var(--accent), var(--blue));
+      border-radius: 1px;
+    }
+    .arrow-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text3);
+      padding: 3px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .arrow-tip {
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--blue);
+    }
+
+    /* Data flow section */
+    .flow-section {
+      max-width: 1100px;
+      margin: 20px auto 60px;
+      padding: 0 20px;
+    }
+    .flow-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .flow-steps {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      padding: 10px 0;
+    }
+    .flow-step {
+      flex: 1;
+      min-width: 140px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      position: relative;
+    }
+    .flow-step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      margin: 0 auto 10px;
+    }
+    .flow-step-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .flow-step-detail { font-size: 11px; color: var(--text2); line-height: 1.4; }
+    .flow-connector {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      color: var(--text3);
+      font-size: 18px;
+    }
+
+    /* Tech stack badges */
+    .tech-stack {
+      max-width: 1100px;
+      margin: 0 auto 60px;
+      padding: 0 20px;
+    }
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .tech-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+    .tech-item .emoji { font-size: 20px; }
+    .tech-item .info .name { font-size: 13px; font-weight: 600; }
+    .tech-item .info .role { font-size: 11px; color: var(--text2); }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .header { padding: 32px 16px 16px; }
+      .header h1 { font-size: 26px; }
+      .header p { font-size: 14px; }
+      .diagram { padding: 0 12px; margin: 24px auto; }
+      .cloud-region { padding: 16px; margin-bottom: 20px; }
+      .components { grid-template-columns: 1fr; gap: 12px; }
+      .flow-steps { flex-direction: column; gap: 0; }
+      .flow-connector {
+        min-width: auto;
+        min-height: 24px;
+        transform: rotate(90deg);
+      }
+      .flow-section { margin: 20px auto 40px; }
+      .tech-grid { grid-template-columns: 1fr 1fr; }
+      .flow-arrows { gap: 12px; flex-wrap: wrap; }
+    }
+    @media (max-width: 380px) {
+      .tech-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-badge">
+        <div class="dot"></div>
+        System Architecture
+      </div>
+      <h1>AgentNexus Architecture</h1>
+      <p>Multi-Tenant AI Agent Orchestration Platform — a detailed view of every component, service, and data flow powering the system.</p>
+      <a href="/" class="back-link">&larr; Back to App</a>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div class="diagram">
+
+      <!-- ═══ Client Layer ═══ -->
+      <div class="cloud-region region-client">
+        <div class="region-label label-client">
+          <span class="icon">&#127760;</span> Client Layer
+        </div>
+        <div class="region-subtitle">Web browsers and API consumers accessing AgentNexus</div>
+        <div class="components">
+          <div class="component">
+            <div class="comp-icon green">&#128187;</div>
+            <div class="comp-name">Web UI (SPA)</div>
+            <div class="comp-detail">Single-page application served as static HTML. Agent selection, task input, SSE streaming display, and TiDB feature demos.</div>
+            <span class="comp-tag tag-protocol">HTML / CSS / JS</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon green">&#128241;</div>
+            <div class="comp-name">Mobile Browser</div>
+            <div class="comp-detail">Responsive layout with slide-out sidebar drawer, optimized touch targets, and adaptive padding for mobile viewports.</div>
+            <span class="comp-tag tag-protocol">Responsive CSS</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon cyan">&#9889;</div>
+            <div class="comp-name">SSE Stream Client</div>
+            <div class="comp-detail">Fetch API with ReadableStream reader. Parses server-sent events in real time for step-by-step execution display.</div>
+            <span class="comp-tag tag-protocol">text/event-stream</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon accent">&#128273;</div>
+            <div class="comp-name">Tenant Context</div>
+            <div class="comp-detail">X-Tenant-ID header sent with every API request. Tenant selector in UI controls which isolated dataset is queried.</div>
+            <span class="comp-tag tag-protocol">HTTP Header</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flow arrow -->
+      <div class="flow-arrows">
+        <div class="flow-arrow">
+          <div class="arrow-line"></div>
+          <div class="arrow-label">HTTPS :8080</div>
+          <div class="arrow-tip"></div>
+        </div>
+        <div class="flow-arrow">
+          <div class="arrow-line" style="background: linear-gradient(to bottom, var(--green), var(--cyan));"></div>
+          <div class="arrow-label">SSE Stream</div>
+          <div class="arrow-tip" style="border-top-color: var(--cyan);"></div>
+        </div>
+        <div class="flow-arrow">
+          <div class="arrow-line" style="background: linear-gradient(to bottom, var(--orange), var(--orange));"></div>
+          <div class="arrow-label">REST JSON</div>
+          <div class="arrow-tip" style="border-top-color: var(--orange);"></div>
+        </div>
+      </div>
+
+      <!-- ═══ Alibaba Cloud ECS ═══ -->
+      <div class="cloud-region region-alibaba">
+        <div class="region-label label-alibaba">
+          <span class="icon">&#9729;</span> Alibaba Cloud — ECS (us-east-1)
+        </div>
+        <div class="region-subtitle">Ubuntu VM running the application server, with Elastic IP and VPC networking</div>
+        <div class="components">
+          <div class="component">
+            <div class="comp-icon orange">&#128640;</div>
+            <div class="comp-name">Express.js Server</div>
+            <div class="comp-detail">Node.js application server handling API routes, static file serving, and SSE streaming. Bound to 0.0.0.0 for external access.</div>
+            <span class="comp-tag tag-port">Port 8080</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon accent">&#128736;</div>
+            <div class="comp-name">API Routes</div>
+            <div class="comp-detail">/api/agents — list agents per tenant<br>/api/execute — SSE task execution<br>/api/analytics/* — TiDB demos</div>
+            <span class="comp-tag tag-protocol">REST + SSE</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon pink">&#129302;</div>
+            <div class="comp-name">Agent Orchestrator</div>
+            <div class="comp-detail">Loads agent config from TiDB, builds system prompts, routes tasks to Qwen AI, and streams execution steps back via SSE.</div>
+            <span class="comp-tag tag-engine">orchestrator.js</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon blue">&#128218;</div>
+            <div class="comp-name">TiDB Client (mysql2)</div>
+            <div class="comp-detail">MySQL-compatible connection pool to TiDB Cloud Serverless. Handles all database operations with tenant-scoped queries.</div>
+            <span class="comp-tag tag-engine">mysql2/promise</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon orange">&#127760;</div>
+            <div class="comp-name">Elastic IP (EIP)</div>
+            <div class="comp-detail">47.85.88.79 — Converted from NAT public IP for reliable inbound routing. Dedicated bandwidth allocation through VPC.</div>
+            <span class="comp-tag tag-infra">5 Mbps</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon orange">&#128274;</div>
+            <div class="comp-name">VPC Security Group</div>
+            <div class="comp-detail">NicType intranet rules for VPC-based instance. Keepalive daemon removes auto-created DROP rules every 30 seconds.</div>
+            <span class="comp-tag tag-infra">sg-0xiggw...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flow arrows -->
+      <div class="flow-arrows">
+        <div class="flow-arrow">
+          <div class="arrow-line" style="background: linear-gradient(to bottom, var(--blue), var(--blue));"></div>
+          <div class="arrow-label">MySQL Protocol :4000 (TLS)</div>
+          <div class="arrow-tip" style="border-top-color: var(--blue);"></div>
+        </div>
+        <div class="flow-arrow">
+          <div class="arrow-line" style="background: linear-gradient(to bottom, var(--pink), var(--pink));"></div>
+          <div class="arrow-label">HTTPS (OpenAI-compat API)</div>
+          <div class="arrow-tip" style="border-top-color: var(--pink);"></div>
+        </div>
+      </div>
+
+      <!-- ═══ TiDB Cloud ═══ -->
+      <div class="cloud-region region-tidb">
+        <div class="region-label label-tidb">
+          <span class="icon">&#128451;</span> TiDB Cloud Serverless (ap-southeast-1)
+        </div>
+        <div class="region-subtitle">Distributed NewSQL database with HTAP capabilities — row + columnar engines</div>
+        <div class="components">
+          <div class="component">
+            <div class="comp-icon blue">&#9881;</div>
+            <div class="comp-name">TiDB SQL Layer</div>
+            <div class="comp-detail">MySQL-compatible query parser, optimizer, and executor. Handles connection pooling, query routing, and EXPLAIN analysis.</div>
+            <span class="comp-tag tag-port">Port 4000 (TLS)</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon blue">&#128203;</div>
+            <div class="comp-name">TiKV (Row Store)</div>
+            <div class="comp-detail">Distributed transactional key-value store. Handles OLTP workloads — agent CRUD, session writes, tool call logging. B-tree indexes for fast point queries.</div>
+            <span class="comp-tag tag-engine">OLTP Engine</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon cyan">&#9783;</div>
+            <div class="comp-name">TiFlash (Columnar)</div>
+            <div class="comp-detail">Columnar replica for OLAP analytics. Real-time sync from TiKV via Raft. Handles GROUP BY aggregations, JOINs, and dashboard queries without impacting transactions.</div>
+            <span class="comp-tag tag-engine">OLAP / HTAP</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon accent">&#128736;</div>
+            <div class="comp-name">Multi-Tenant Schema</div>
+            <div class="comp-detail">tenant_id column on all tables with composite indexes. WHERE tenant_id = ? on every query ensures complete data isolation between organizations.</div>
+            <span class="comp-tag tag-engine">Row-Level Isolation</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon green">&#128196;</div>
+            <div class="comp-name">Tables</div>
+            <div class="comp-detail">agents — config &amp; capabilities<br>agent_sessions — AUTO_RANDOM PKs<br>tool_calls — execution telemetry<br>All with tenant_id scoping.</div>
+            <span class="comp-tag tag-engine">AUTO_RANDOM</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ DashScope / Qwen AI ═══ -->
+      <div class="cloud-region region-ai" style="margin-top: 32px;">
+        <div class="region-label label-ai">
+          <span class="icon">&#129504;</span> Alibaba Cloud — DashScope AI (International)
+        </div>
+        <div class="region-subtitle">Large Language Model service powering agent intelligence and reasoning</div>
+        <div class="components">
+          <div class="component">
+            <div class="comp-icon pink">&#10024;</div>
+            <div class="comp-name">Qwen-Plus Model</div>
+            <div class="comp-detail">Alibaba's flagship LLM accessed via the international DashScope endpoint. Processes agent tasks with system prompts built from TiDB agent configurations.</div>
+            <span class="comp-tag tag-model">qwen-plus</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon pink">&#128279;</div>
+            <div class="comp-name">OpenAI-Compatible API</div>
+            <div class="comp-detail">dashscope-intl.aliyuncs.com/compatible-mode/v1 — Standard chat completions format. Streaming responses parsed and forwarded as SSE events.</div>
+            <span class="comp-tag tag-protocol">REST / Streaming</span>
+          </div>
+          <div class="component">
+            <div class="comp-icon accent">&#128200;</div>
+            <div class="comp-name">Ops Intelligence</div>
+            <div class="comp-detail">Meta-analysis layer: after task execution, Qwen analyzes agent performance data from TiDB to generate operational insights and recommendations.</div>
+            <span class="comp-tag tag-model">AI Analytics</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ Data Flow ═══ -->
+    <div class="flow-section">
+      <div class="flow-title">Request Lifecycle — Task Execution Flow</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-title">User Input</div>
+          <div class="flow-step-detail">User selects agent + types task in Web UI</div>
+        </div>
+        <div class="flow-connector">&rarr;</div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-title">API Request</div>
+          <div class="flow-step-detail">POST /api/execute with X-Tenant-ID header</div>
+        </div>
+        <div class="flow-connector">&rarr;</div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-title">Load Config</div>
+          <div class="flow-step-detail">Fetch agent tools &amp; capabilities from TiDB</div>
+        </div>
+        <div class="flow-connector">&rarr;</div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-title">AI Reasoning</div>
+          <div class="flow-step-detail">Qwen-Plus processes task with system prompt</div>
+        </div>
+        <div class="flow-connector">&rarr;</div>
+        <div class="flow-step">
+          <div class="flow-step-num">5</div>
+          <div class="flow-step-title">Log &amp; Stream</div>
+          <div class="flow-step-detail">Steps logged to TiDB, streamed via SSE to client</div>
+        </div>
+        <div class="flow-connector">&rarr;</div>
+        <div class="flow-step">
+          <div class="flow-step-num">6</div>
+          <div class="flow-step-title">Ops Analysis</div>
+          <div class="flow-step-detail">Qwen meta-analyzes performance from TiDB data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Tech Stack ═══ -->
+    <div class="tech-stack">
+      <div class="flow-title">Technology Stack</div>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="emoji">&#128154;</div>
+          <div class="info">
+            <div class="name">Node.js</div>
+            <div class="role">Runtime Environment</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#128747;</div>
+          <div class="info">
+            <div class="name">Express.js</div>
+            <div class="role">HTTP Server + Routing</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#128451;</div>
+          <div class="info">
+            <div class="name">TiDB Cloud</div>
+            <div class="role">Distributed Database</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#9783;</div>
+          <div class="info">
+            <div class="name">TiFlash</div>
+            <div class="role">Columnar HTAP Engine</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#129504;</div>
+          <div class="info">
+            <div class="name">Qwen-Plus</div>
+            <div class="role">LLM (DashScope)</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#9729;</div>
+          <div class="info">
+            <div class="name">Alibaba Cloud ECS</div>
+            <div class="role">Compute Instance</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#128274;</div>
+          <div class="info">
+            <div class="name">VPC + EIP</div>
+            <div class="role">Network Layer</div>
+          </div>
+        </div>
+        <div class="tech-item">
+          <div class="emoji">&#128218;</div>
+          <div class="info">
+            <div class="name">mysql2</div>
+            <div class="role">Database Driver</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      AgentNexus &mdash; Multi-Tenant AI Agent Orchestration Platform &middot; Built with TiDB Cloud + Alibaba Cloud + Qwen AI &middot; March 2026
+    </div>
+
+  </div>
+</body>
+</html>
