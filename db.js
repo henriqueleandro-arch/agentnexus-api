@@ -1,4 +1,4 @@
-// db.js â TiDB connection pool with tenant isolation
+// db.js — TiDB connection pool with tenant isolation
 const mysql = require("mysql2/promise");
 
 let pool = null;

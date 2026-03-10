@@ -1,7 +1,7 @@
 {
   "name": "agentnexus-api",
   "version": "1.0.0",
-  "description": "AgentNexus â Multi-Tenant AI Agent Orchestration Platform (TiDB + Qwen)",
+  "description": "AgentNexus — Multi-Tenant AI Agent Orchestration Platform (TiDB + Qwen)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
