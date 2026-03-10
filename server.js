@@ -8,10 +8,10 @@ const cors = require("cors");
 const routes = require("./routes");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(require("path").join(__dirname, "public")));
 
 // ─── API Info (moved to /api/info so index.html serves at /) ──
@@ -35,7 +35,7 @@ app.get("/api/info", (req, res) => {
       "tenant_acme", "tenant_globex", "tenant_initech",
       "tenant_umbrella", "tenant_waynetech", "tenant_nexagen"
     ],
-    usage: 'curl -H "X-Tenant-ID: tenant_acme" http://localhost:3000/api/agents',
+    usage: 'curl -H "X-Tenant-ID: tenant_acme" http://localhost:8080/api/agents',
   });
 });
 
