@@ -323,10 +323,12 @@ router.post("/execute", async (req, res) => {
 
   // Set up SSE
   res.writeHead(200, {
+    "X-Accel-Buffering": "no",
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     Connection: "keep-alive",
   });
+  res.flushHeaders();
 
   const send = (type, data) => {
     res.write(`data: ${JSON.stringify({ type, ...data })}\n\n`);
