@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentNexus</title>
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --surface: #ffffff;
+      --border: #e5e5ea;
+      --text: #1a1a2e;
+      --text2: #6b7280;
+      --text3: #9ca3af;
+      --accent: #5b4cdb;
+      --accent-light: #eeedf8;
+      --green: #10b981;
+      --green-bg: #ecfdf5;
+      --red: #ef4444;
+      --red-bg: #fef2f2;
+      --orange: #f59e0b;
+      --orange-bg: #fffbeb;
+      --blue: #3b82f6;
+      --blue-bg: #eff6ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--accent), #7c6cf0);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 800; font-size: 15px;
+    }
+    .topbar h1 { font-size: 17px; font-weight: 700; }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .tenant-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    .tenant-pill select {
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      font-weight: 500;
+    }
+    .dot-green { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .tech-tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      background: var(--accent-light);
+      color: var(--accent);
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    /* ── Main layout ── */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Left: Agent picker ── */
+    .agents-panel {
+      width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .agents-title {
+      padding: 16px 20px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .agents-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px 12px;
+    }
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.12s;
+      margin-bottom: 4px;
+    }
+    .agent-item:hover { background: var(--bg); }
+    .agent-item.selected { background: var(--accent-light); }
+    .agent-avatar {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px;
+      flex-shrink: 0;
+    }
+    .agent-avatar.analyst { background: #eff6ff; color: var(--blue); }
+    .agent-avatar.communication { background: #fef3c7; color: var(--orange); }
+    .agent-avatar.documentation { background: #ecfdf5; color: var(--green); }
+    .agent-avatar.testing { background: #fce7f3; color: #ec4899; }
+    .agent-avatar.code { background: #f3e8ff; color: #8b5cf6; }
+    .agent-avatar.default { background: var(--accent-light); color: var(--accent); }
+    .agent-info .name { font-size: 13px; font-weight: 600; }
+    .agent-info .type { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+    /* ── Center: Task area ── */
+    .task-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Execution log */
+    .execution-log {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 32px;
+    }
+
+    .welcome {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      color: var(--text2);
+    }
+    .welcome .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .welcome h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .welcome p { font-size: 14px; max-width: 400px; line-height: 1.6; }
+
+    .exec-item {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .exec-step-indicator {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .exec-step-indicator.running {
+      background: var(--blue-bg);
+      color: var(--blue);
+      animation: pulse 1.2s infinite;
+    }
+    .exec-step-indicator.completed { background: var(--green-bg); color: var(--green); }
+    .exec-step-indicator.failed { background: var(--red-bg); color: var(--red); }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.3); }
+      50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+    }
+
+    .exec-content { flex: 1; min-width: 0; }
+    .exec-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .exec-detail { font-size: 13px; color: var(--text2); line-height: 1.5; }
+    .exec-data {
+      margin-top: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: var(--text2);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .exec-result {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 8px;
+      animation: fadeIn 0.4s ease;
+    }
+    .exec-result h4 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: var(--accent); }
+    .exec-result .summary { font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
+    .exec-result .rec-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 6px 0;
+      color: var(--text2);
+    }
+    .priority-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .priority-tag.high { background: var(--red-bg); color: var(--red); }
+    .priority-tag.medium { background: var(--orange-bg); color: var(--orange); }
+    .priority-tag.low { background: var(--green-bg); color: var(--green); }
+
+    /* Input bar */
+    .input-bar {
+      padding: 16px 32px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 6px 6px 16px;
+      transition: border-color 0.15s;
+    }
+    .input-row:focus-within { border-color: var(--accent); }
+    .input-row input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      padding: 8px 0;
+    }
+    .input-row input::placeholder { color: var(--text3); }
+    .send-btn {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.12s;
+      flex-shrink: 0;
+    }
+    .send-btn:hover { background: #4a3bc7; }
+    .send-btn:disabled { background: var(--border); cursor: not-allowed; }
+    .send-btn svg { width: 18px; height: 18px; }
+    .input-hint {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 8px;
+      text-align: center;
+    }
+    .input-hint span { color: var(--text2); font-weight: 500; }
+
+    /* History items */
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .task-header .agent-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+    .task-header .task-text { font-size: 15px; font-weight: 500; flex: 1; }
+    .task-header .task-time { font-size: 11px; color: var(--text3); }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    /* ── Demo buttons ── */
+    .demos-section {
+      border-top: 1px solid var(--border);
+      padding: 12px;
+    }
+    .demos-title {
+      padding: 4px 8px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .demo-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s;
+      margin-bottom: 6px;
+      text-align: left;
+    }
+    .demo-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .demo-btn .demo-icon { font-size: 14px; width: 18px; text-align: center; }
+    .demo-btn .demo-label { flex: 1; }
+    .demo-btn .demo-tag {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      background: var(--green-bg);
+      color: var(--green);
+    }
+
+    /* ── Demo result cards ── */
+    .demo-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+    .demo-card h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .demo-card .subtitle { font-size: 12px; color: var(--text2); margin-bottom: 14px; }
+    .demo-card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .demo-card th {
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text2);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-card td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-card tr:last-child td { border-bottom: none; }
+    .demo-bar-track {
+      height: 20px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .demo-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      min-width: 24px;
+      transition: width 0.4s ease;
+    }
+    .demo-bar-fill.purple { background: var(--accent); }
+    .demo-bar-fill.green { background: var(--green); }
+    .sql-hint {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 14px;
+      overflow-x: auto;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .info-box {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .info-box .val { font-size: 22px; font-weight: 700; }
+    .info-box .lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+    /* Loading dots */
+    .loading-dots span {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin: 0 2px;
+      animation: bounce 1.4s infinite both;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.16s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.32s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">N</div>
+      <h1>AgentNexus</h1>
+    </div>
+    <div class="topbar-right">
+      <span class="tech-tag">TiDB Cloud</span>
+      <span class="tech-tag">Qwen AI</span>
+      <div class="tenant-pill">
+        <div class="dot-green"></div>
+        <select id="tenantSelect" onchange="switchTenant()">
+          <option value="tenant_acme">Acme Corp</option>
+          <option value="tenant_globex">Globex Corp</option>
+          <option value="tenant_initech">Initech</option>
+          <option value="tenant_umbrella">Umbrella Corp</option>
+          <option value="tenant_waynetech">Wayne Tech</option>
+          <option value="tenant_nexagen">NexaGen</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Agent Picker -->
+    <div class="agents-panel">
+      <div class="agents-title">Select Agent</div>
+      <div class="agents-list" id="agentsList">
+        <div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">
+          <div class="loading-dots"><span></span><span></span><span></span></div>
+          <br>Loading agents...
+        </div>
+      </div>
+      <div class="demos-section">
+        <div class="demos-title">TiDB Features</div>
+        <button class="demo-btn" onclick="demoHTAP()">
+          <span class="demo-icon">&#9783;</span>
+          <span class="demo-label">HTAP Analytics</span>
+          <span class="demo-tag">TiFlash</span>
+        </button>
+        <button class="demo-btn" onclick="demoMultiTenancy()">
+          <span class="demo-icon">&#9881;</span>
+          <span class="demo-label">Multi-Tenancy</span>
+          <span class="demo-tag">Isolation</span>
+        </button>
+        <button class="demo-btn" onclick="demoHealth()">
+          <span class="demo-icon">&#9889;</span>
+          <span class="demo-label">TiDB Health</span>
+          <span class="demo-tag">Status</span>
+        </button>
+        <button class="demo-btn" onclick="demoSessions()">
+          <span class="demo-icon">&#9654;</span>
+          <span class="demo-label">Session History</span>
+          <span class="demo-tag">AUTO_RANDOM</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Task Area -->
+    <div class="task-area">
+      <div class="execution-log" id="execLog">
+        <div class="welcome">
+          <div class="icon">&#10024;</div>
+          <h3>Give an agent a task</h3>
+          <p>Select an agent on the left, type a task below, and watch AgentNexus execute it step-by-step using TiDB and Qwen AI.</p>
+        </div>
+      </div>
+
+      <div class="input-bar">
+        <div class="input-row">
+          <input type="text" id="taskInput" placeholder="Describe a task for the agent..." onkeydown="if(event.key==='Enter')executeTask()">
+          <button class="send-btn" id="sendBtn" onclick="executeTask()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <div class="input-hint">
+          Selected: <span id="selectedAgentName">none</span> &middot; Press Enter to execute
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = window.location.origin + '/api';
+    let tenant = 'tenant_acme';
+    let agents = [];
+    let selectedAgent = null;
+    let isRunning = false;
+
+    const h = () => ({ 'X-Tenant-ID': tenant, 'Content-Type': 'application/json' });
+
+    function switchTenant() {
+      tenant = document.getElementById('tenantSelect').value;
+      loadAgents();
+    }
+
+    // ── Agents ──
+    async function loadAgents() {
+      try {
+        const res = await fetch(API + '/agents', { headers: h() });
+        const data = await res.json();
+        agents = data.agents || [];
+        renderAgents();
+        if (agents.length > 0 && !selectedAgent) selectAgent(agents[0]);
+      } catch (e) {
+        document.getElementById('agentsList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--red);font-size:13px;">Could not connect to API.<br>Is the server running?</div>';
+      }
+    }
+
+    function getAvatarClass(type) {
+      const t = (type || '').toLowerCase();
+      if (t.includes('analyst') || t.includes('data')) return 'analyst';
+      if (t.includes('communication') || t.includes('email')) return 'communication';
+      if (t.includes('doc') || t.includes('write')) return 'documentation';
+      if (t.includes('test') || t.includes('qa')) return 'testing';
+      if (t.includes('code') || t.includes('dev')) return 'code';
+      return 'default';
+    }
+
+    function renderAgents() {
+      const el = document.getElementById('agentsList');
+      if (agents.length === 0) {
+        el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No agents found</div>';
+        return;
+      }
+      el.innerHTML = agents.map(a => {
+        const cls = getAvatarClass(a.type);
+        const sel = selectedAgent && selectedAgent.agent_id === a.agent_id ? ' selected' : '';
+        return `
+          <div class="agent-item${sel}" onclick="selectAgent(agents.find(x=>x.agent_id===${a.agent_id}))">
+            <div class="agent-avatar ${cls}">${a.name.charAt(0)}</div>
+            <div class="agent-info">
+              <div class="name">${a.name}</div>
+              <div class="type">${a.type}</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function selectAgent(agent) {
+      selectedAgent = agent;
+      document.getElementById('selectedAgentName').textContent = agent.name;
+      renderAgents();
+      document.getElementById('taskInput').focus();
+    }
+
+    // ── Execute Task ──
+    async function executeTask() {
+      const input = document.getElementById('taskInput');
+      const task = input.value.trim();
+      if (!task || !selectedAgent || isRunning) return;
+
+      isRunning = true;
+      input.value = '';
+      document.getElementById('sendBtn').disabled = true;
+
+      const log = document.getElementById('execLog');
+
+      // Remove welcome if present
+      const welcome = log.querySelector('.welcome');
+      if (welcome) welcome.remove();
+
+      // Add divider if there's existing content
+      if (log.children.length > 0) {
+        log.insertAdjacentHTML('beforeend', '<hr class="divider">');
+      }
+
+      // Task header
+      log.insertAdjacentHTML('beforeend', `
+        <div class="task-header">
+          <span class="agent-tag">${selectedAgent.name}</span>
+          <span class="task-text">${escapeHtml(task)}</span>
+          <span class="task-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `);
+
+      // Stream execution via fetch + SSE parsing
+      try {
+        const response = await fetch(API + '/execute', {
+          method: 'POST',
+          headers: h(),
+          body: JSON.stringify({ agent_id: selectedAgent.agent_id, task: task })
+        });
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const event = JSON.parse(line.slice(6));
+                handleEvent(event, log);
+              } catch (e) { /* skip malformed */ }
+            }
+          }
+        }
+      } catch (e) {
+        log.insertAdjacentHTML('beforeend', `
+          <div class="exec-item">
+            <div class="exec-step-indicator failed">!</div>
+            <div class="exec-content">
+              <div class="exec-title">Connection Error</div>
+              <div class="exec-detail">${escapeHtml(e.message)}</div>
+            </div>
+          </div>
+        `);
+      }
+
+      isRunning = false;
+      document.getElementById('sendBtn').disabled = false;
+      input.focus();
+    }
+
+    function handleEvent(event, log) {
+      if (event.type === 'step') {
+        const id = `step-${event.step}`;
+        const existing = document.getElementById(id);
+
+        const icon = event.status === 'completed' ? '&#10003;' :
+                     event.status === 'failed' ? '&#10007;' :
+                     event.step;
+
+        // TiDB feature badge
+        const featureHtml = event.tidb_feature ? `
+          <div style="margin-top:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:8px 10px;font-size:11px;">
+            <span style="font-weight:700;color:#1d4ed8;">TiDB: ${escapeHtml(event.tidb_feature.name)}</span>
+            <span style="color:#1e40af;margin-left:4px;">${escapeHtml(event.tidb_feature.detail)}</span>
+          </div>
+        ` : '';
+
+        const html = `
+          <div class="exec-item" id="${id}">
+            <div class="exec-step-indicator ${event.status}">${icon}</div>
+            <div class="exec-content">
+              <div class="exec-title">${escapeHtml(event.title)}</div>
+              <div class="exec-detail">${escapeHtml(event.detail)}</div>
+              ${event.status === 'completed' ? featureHtml : ''}
+            </div>
+          </div>
+        `;
+
+        if (existing) {
+          existing.outerHTML = html;
+        } else {
+          log.insertAdjacentHTML('beforeend', html);
+        }
+        log.scrollTop = log.scrollHeight;
+      }
+
+      // Agent's actual task response (Manus-like)
+      if (event.type === 'task_result') {
+        log.insertAdjacentHTML('beforeend', `
+          <div class="exec-result" style="border-left-color:var(--green);margin:12px 0;">
+            <h4 style="color:var(--green);">&#9998; ${escapeHtml(event.agent)}'s Response</h4>
+            <div class="summary" style="white-space:pre-wrap;line-height:1.7;font-size:14px;">${escapeHtml(event.response)}</div>
+            <div style="margin-top:10px;font-size:11px;color:var(--text3);">Source: ${escapeHtml(event.source || 'qwen')}</div>
+          </div>
+        `);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      if (event.type === 'done' && event.success) {
+        const a = event.analysis || {};
+        const recs = a.recommendations || [];
+        const tr = event.taskResult || {};
+        log.insertAdjacentHTML('beforeend', `
+          <div class="exec-result" style="margin-top:12px;">
+            <h4>&#128202; Ops Intelligence Dashboard</h4>
+            <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">
+              Meta-analysis of agent performance — powered by TiDB (data) + Qwen (reasoning)
+            </div>
+            <div class="summary">${escapeHtml(a.summary || '')}</div>
+            ${a.top_issues ? `<div style="margin:12px 0;">
+              ${a.top_issues.map(i => `<div style="font-size:13px;color:var(--orange);padding:3px 0;">&#9888; ${escapeHtml(i)}</div>`).join('')}
+            </div>` : ''}
+            ${recs.length ? `<div>
+              ${recs.map(r => `
+                <div class="rec-row">
+                  <span class="priority-tag ${r.priority || 'medium'}">${(r.priority || 'medium')}</span>
+                  <strong>${escapeHtml(r.agent || '')}:</strong> ${escapeHtml(r.action || '')}
+                </div>
+              `).join('')}
+            </div>` : ''}
+            ${a.tool_optimization ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+              ${a.tool_optimization.map(t => `<div style="font-size:12px;color:var(--text2);padding:3px 0;">&#9881; <strong>${escapeHtml(t.tool)}</strong>: ${escapeHtml(t.suggestion)}</div>`).join('')}
+            </div>` : ''}
+          </div>
+        `);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      if (event.type === 'error') {
+        log.insertAdjacentHTML('beforeend', `
+          <div class="exec-item">
+            <div class="exec-step-indicator failed">!</div>
+            <div class="exec-content">
+              <div class="exec-title">Error</div>
+              <div class="exec-detail" style="color:var(--red);">${escapeHtml(event.message || 'Unknown error')}</div>
+            </div>
+          </div>
+        `);
+        log.scrollTop = log.scrollHeight;
+      }
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // ── TiDB Feature Demos ──
+
+    function clearWelcome() {
+      const log = document.getElementById('execLog');
+      const welcome = log.querySelector('.welcome');
+      if (welcome) welcome.remove();
+      if (log.children.length > 0) log.insertAdjacentHTML('beforeend', '<hr class="divider">');
+      return log;
+    }
+
+    async function demoHTAP() {
+      if (isRunning) return;
+      isRunning = true;
+      const log = clearWelcome();
+      log.insertAdjacentHTML('beforeend', `
+        <div class="task-header">
+          <span class="agent-tag" style="background:var(--green-bg);color:var(--green);">TiFlash HTAP</span>
+          <span class="task-text">TiKV vs TiFlash — Engine Comparison</span>
+          <span class="task-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `);
+
+      try {
+        // Show loading
+        log.insertAdjacentHTML('beforeend', `
+          <div class="demo-card" id="htap-loading">
+            <div style="text-align:center;padding:20px;color:var(--text2);">
+              <div class="loading-dots"><span></span><span></span><span></span></div>
+              <div style="margin-top:10px;font-size:13px;">Running the same query on both TiKV (row) and TiFlash (columnar)...</div>
+            </div>
+          </div>
+        `);
+
+        const res = await fetch(API + '/analytics/htap-compare', { headers: h() });
+        const data = await res.json();
+
+        // Remove loading
+        const loadEl = document.getElementById('htap-loading');
+        if (loadEl) loadEl.remove();
+
+        const tikv = data.tikv;
+        const tiflash = data.tiflash;
+        const tikvFaster = tikv.time_ms < tiflash.time_ms;
+
+        // Find cop[tikv] and cop[tiflash] in explain output
+        const tikvCops = tikv.explain.filter(r => r.task && r.task.includes('tikv')).length;
+        const tiflashCops = tiflash.explain.filter(r => r.task && (r.task.includes('tiflash') || r.task.includes('mpp'))).length;
+        // On TiDB Serverless, TiFlash may show as cop[tikv] in EXPLAIN but routes internally
+        const isServerless = tiflashCops === 0 && tiflash.time_ms !== tikv.time_ms;
+
+        // Format explain as text — include execution_info for EXPLAIN ANALYZE
+        const fmtExplain = (rows) => rows.map(r => {
+          const exec = r.execution_info ? ` | ${r.execution_info.substring(0, 60)}` : '';
+          return `${r.id || ''} | ${r.task || ''}${exec}`;
+        }).join('\n');
+
+        const maxS = Math.max(...data.data.map(a => +a.total_sessions), 1);
+        const maxT = Math.max(...data.data.map(a => +a.total_tool_calls), 1);
+
+        log.insertAdjacentHTML('beforeend', `
+          <div class="demo-card">
+            <h4>&#9783; HTAP Engine Comparison — Same Query, Two Engines</h4>
+            <div class="subtitle">Both queries run the same analytical aggregation (JOIN + GROUP BY + COUNT + AVG) on the same data</div>
+
+            <!-- Timing comparison -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+              <div style="background:var(--bg);border-radius:10px;padding:16px;border:2px solid ${tikvFaster ? 'var(--green)' : 'var(--border)'};">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text2);margin-bottom:6px;">TiKV (Row Store)</div>
+                <div style="font-size:28px;font-weight:800;color:${tikvFaster ? 'var(--green)' : 'var(--text)'};">${tikv.time_ms}ms</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:4px;">cop[tikv] operators: ${tikvCops}</div>
+                ${tikvFaster ? '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:4px;">&#9650; Faster on this dataset</div>' : ''}
+              </div>
+              <div style="background:var(--bg);border-radius:10px;padding:16px;border:2px solid ${!tikvFaster ? 'var(--green)' : 'var(--border)'};">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text2);margin-bottom:6px;">TiFlash (Columnar Store)</div>
+                <div style="font-size:28px;font-weight:800;color:${!tikvFaster ? 'var(--green)' : 'var(--text)'};">${tiflash.time_ms}ms</div>
+                <div style="font-size:11px;color:var(--text3);margin-top:4px;">cop[tiflash] operators: ${tiflashCops}</div>
+                ${!tikvFaster ? '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:4px;">&#9650; Faster on this dataset</div>' : ''}
+              </div>
+            </div>
+
+            <!-- Why TiFlash matters - always shown -->
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:14px;margin-bottom:20px;">
+              <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px;">&#9888; Why TiFlash matters — it's not just about speed</div>
+              <div style="font-size:13px;color:#78350f;line-height:1.7;">
+                ${tikvFaster
+                  ? `<strong>TiKV is faster here because our dataset is small</strong> (~${tikv.row_count} agents, hundreds of rows). TiKV's row-based B-tree indexes handle small scans efficiently. TiFlash's columnar engine has startup overhead that only pays off at scale.<br><br>`
+                  : `TiFlash is faster here, and the gap <strong>grows dramatically</strong> as data scales.<br><br>`
+                }
+                <strong>The real value of TiFlash is workload isolation, not raw speed:</strong>
+                <ul style="margin:8px 0 0 20px;">
+                  <li style="margin-bottom:6px;"><strong>Without TiFlash:</strong> This GROUP BY + JOIN aggregation competes with agent session writes (INSERTs) on the same TiKV nodes. Under load, dashboards slow down transactions — or transactions block dashboards.</li>
+                  <li style="margin-bottom:6px;"><strong>With TiFlash:</strong> Analytics run on a separate columnar engine. Agents can write thousands of sessions and tool calls while dashboards query freely — zero contention.</li>
+                  <li><strong>At SaaS scale:</strong> With 50+ tenants running concurrent agents, analytical queries on TiKV would cause cross-tenant performance degradation. TiFlash eliminates this entirely.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- EXPLAIN comparison -->
+            <div style="margin-bottom:20px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:8px;">EXPLAIN Output Comparison</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;">TiKV Plan — reads from row store</div>
+                  <div class="sql-hint" style="font-size:10px;max-height:160px;overflow-y:auto;white-space:pre;line-height:1.5;">${escapeHtml(fmtExplain(tikv.explain))}</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px;">TiFlash Plan — reads from columnar store</div>
+                  <div class="sql-hint" style="font-size:10px;max-height:160px;overflow-y:auto;white-space:pre;line-height:1.5;">${escapeHtml(fmtExplain(tiflash.explain))}</div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text2);margin-top:6px;">
+                ${isServerless
+                  ? 'On TiDB Cloud Serverless, the <strong>READ_FROM_STORAGE(TIFLASH[...])</strong> hint routes the query to columnar storage internally. The optimizer confirms this via the query hint, even though the EXPLAIN may show a unified task label.'
+                  : 'Look for <strong>cop[tikv]</strong> vs <strong>cop[tiflash]</strong> in the task column — this confirms which engine executed each operator.'
+                }
+              </div>
+            </div>
+
+            <!-- Data chart -->
+            <div style="font-size:12px;font-weight:600;margin-bottom:10px;">Query Results (identical from both engines)</div>
+            <div style="display:flex;gap:16px;margin-bottom:10px;font-size:12px;">
+              <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:var(--accent);border-radius:3px;display:inline-block;"></span> Sessions</span>
+              <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;background:var(--green);border-radius:3px;display:inline-block;"></span> Tool Calls</span>
+              <span style="margin-left:auto;color:var(--text3);">Avg Duration (ms)</span>
+            </div>
+            <table>
+              ${data.data.map(a => `
+                <tr>
+                  <td style="width:130px;font-weight:500;">${a.agent_name}</td>
+                  <td>
+                    <div style="display:flex;gap:4px;">
+                      <div class="demo-bar-track" style="flex:1;">
+                        <div class="demo-bar-fill purple" style="width:${(a.total_sessions/maxS*100)}%">${a.total_sessions}</div>
+                      </div>
+                      <div class="demo-bar-track" style="flex:1;">
+                        <div class="demo-bar-fill green" style="width:${(a.total_tool_calls/maxT*100)}%">${a.total_tool_calls}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="width:70px;text-align:right;color:var(--text2);font-size:12px;">${a.avg_tool_duration_ms}ms</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        `);
+      } catch (e) {
+        const loadEl = document.getElementById('htap-loading');
+        if (loadEl) loadEl.remove();
+        log.insertAdjacentHTML('beforeend', `<div class="exec-item"><div class="exec-step-indicator failed">!</div><div class="exec-content"><div class="exec-title">Error</div><div class="exec-detail" style="color:var(--red)">${escapeHtml(e.message)}</div></div></div>`);
+      }
+      isRunning = false;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function demoMultiTenancy() {
+      if (isRunning) return;
+      const log = clearWelcome();
+      log.insertAdjacentHTML('beforeend', `
+        <div class="task-header">
+          <span class="agent-tag" style="background:var(--blue-bg);color:var(--blue);">Multi-Tenancy</span>
+          <span class="task-text">Schema-per-tenant isolation</span>
+          <span class="task-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `);
+
+      const tenants = ['tenant_acme', 'tenant_globex', 'tenant_initech', 'tenant_umbrella', 'tenant_waynetech', 'tenant_nexagen'];
+      const results = [];
+
+      for (const t of tenants) {
+        try {
+          const res = await fetch(API + '/agents', { headers: { 'X-Tenant-ID': t, 'Content-Type': 'application/json' } });
+          const data = await res.json();
+          const res2 = await fetch(API + '/sessions?limit=100', { headers: { 'X-Tenant-ID': t, 'Content-Type': 'application/json' } });
+          const data2 = await res2.json();
+          results.push({ tenant: t, agents: data.count || 0, sessions: data2.count || 0, agentNames: (data.agents || []).slice(0, 3).map(a => a.name) });
+        } catch (e) {
+          results.push({ tenant: t, agents: '?', sessions: '?', agentNames: [] });
+        }
+      }
+
+      const maxSess = Math.max(...results.map(r => +r.sessions || 0), 1);
+
+      log.insertAdjacentHTML('beforeend', `
+        <div class="demo-card">
+          <h4>&#9881; Multi-Tenant Isolation</h4>
+          <div class="subtitle">Each tenant has its own database schema — data is completely isolated via USE \`tenant_id\` before every query</div>
+          <div class="sql-hint">-- Middleware extracts X-Tenant-ID header, validates format, then runs: USE \`tenant_acme\`; SELECT * FROM agents ...</div>
+          <table>
+            <tr><th>Tenant</th><th>Agents</th><th>Sessions</th><th>Sample Agents</th></tr>
+            ${results.map(r => `
+              <tr>
+                <td style="font-weight:600;">${r.tenant.replace('tenant_', '')}</td>
+                <td>${r.agents}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="demo-bar-track" style="width:80px;">
+                      <div class="demo-bar-fill purple" style="width:${(r.sessions/maxSess*100)}%">${r.sessions}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style="font-size:12px;color:var(--text2);">${r.agentNames.join(', ') || '–'}</td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      `);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function demoHealth() {
+      if (isRunning) return;
+      const log = clearWelcome();
+      log.insertAdjacentHTML('beforeend', `
+        <div class="task-header">
+          <span class="agent-tag" style="background:var(--orange-bg);color:var(--orange);">TiDB Health</span>
+          <span class="task-text">Cluster status and version</span>
+          <span class="task-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `);
+
+      try {
+        const res = await fetch(API + '/health', { headers: h() });
+        const data = await res.json();
+        const v = data.tidb?.version || 'unknown';
+        const t = data.tidb?.server_time || 'unknown';
+
+        log.insertAdjacentHTML('beforeend', `
+          <div class="demo-card">
+            <h4>&#9889; TiDB Cloud Starter — Health Check</h4>
+            <div class="subtitle">Connected to TiDB Cloud Serverless (Free Tier) in Singapore</div>
+            <div class="info-grid">
+              <div class="info-box">
+                <div class="val" style="color:var(--green);font-size:16px;">&#10003; Online</div>
+                <div class="lbl">Status</div>
+              </div>
+              <div class="info-box">
+                <div class="val" style="font-size:14px;">${escapeHtml(v)}</div>
+                <div class="lbl">TiDB Version</div>
+              </div>
+              <div class="info-box">
+                <div class="val" style="font-size:14px;">ap-southeast-1</div>
+                <div class="lbl">Region (Singapore)</div>
+              </div>
+              <div class="info-box">
+                <div class="val" style="font-size:14px;">${escapeHtml(String(t))}</div>
+                <div class="lbl">Server Time</div>
+              </div>
+            </div>
+            <div style="margin-top:14px;font-size:12px;color:var(--text2);">
+              <strong>Key Features:</strong> Serverless auto-scaling &middot; 50M Request Units/month free &middot; TiFlash HTAP &middot; AUTO_RANDOM distributed PKs &middot; MySQL compatible
+            </div>
+          </div>
+        `);
+      } catch (e) {
+        log.insertAdjacentHTML('beforeend', `<div class="exec-item"><div class="exec-step-indicator failed">!</div><div class="exec-content"><div class="exec-title">Connection Failed</div><div class="exec-detail" style="color:var(--red)">${escapeHtml(e.message)}</div></div></div>`);
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function demoSessions() {
+      if (isRunning) return;
+      const log = clearWelcome();
+      log.insertAdjacentHTML('beforeend', `
+        <div class="task-header">
+          <span class="agent-tag" style="background:#f3e8ff;color:#8b5cf6;">Sessions</span>
+          <span class="task-text">AUTO_RANDOM distributed primary keys</span>
+          <span class="task-time">${new Date().toLocaleTimeString()}</span>
+        </div>
+      `);
+
+      try {
+        const res = await fetch(API + '/sessions?limit=10', { headers: h() });
+        const data = await res.json();
+
+        const statusColor = s => s === 'completed' ? 'var(--green)' : s === 'failed' ? 'var(--red)' : 'var(--orange)';
+        const statusBg = s => s === 'completed' ? 'var(--green-bg)' : s === 'failed' ? 'var(--red-bg)' : 'var(--orange-bg)';
+
+        log.insertAdjacentHTML('beforeend', `
+          <div class="demo-card">
+            <h4>&#9654; Session History — AUTO_RANDOM IDs</h4>
+            <div class="subtitle">Session IDs are generated by TiDB's AUTO_RANDOM — distributed across TiKV regions to avoid hotspots in distributed writes</div>
+            <div class="sql-hint">CREATE TABLE sessions (session_id BIGINT PRIMARY KEY AUTO_RANDOM, ...); -- No explicit ID needed on INSERT</div>
+            <table>
+              <tr><th>Session ID (AUTO_RANDOM)</th><th>Agent</th><th>Task</th><th>Status</th><th>Started</th></tr>
+              ${(data.sessions || []).map(s => `
+                <tr>
+                  <td style="font-family:'SF Mono','Fira Code',monospace;font-size:11px;color:var(--accent);">${s.session_id}</td>
+                  <td style="font-weight:500;">${s.agent_name}</td>
+                  <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text2);">${s.task_description || '–'}</td>
+                  <td><span style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;background:${statusBg(s.status)};color:${statusColor(s.status)};">${s.status}</span></td>
+                  <td style="font-size:11px;color:var(--text3);">${new Date(s.started_at).toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </table>
+            ${(data.sessions || []).length > 0 ? `<div style="margin-top:12px;font-size:12px;color:var(--text2);">Notice the large, seemingly random session IDs — these are AUTO_RANDOM values that distribute writes evenly across TiKV storage nodes, preventing write hotspots that occur with sequential AUTO_INCREMENT.</div>` : ''}
+          </div>
+        `);
+      } catch (e) {
+        log.insertAdjacentHTML('beforeend', `<div class="exec-item"><div class="exec-step-indicator failed">!</div><div class="exec-content"><div class="exec-title">Error</div><div class="exec-detail" style="color:var(--red)">${escapeHtml(e.message)}</div></div></div>`);
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Init
+    loadAgents();
+    document.getElementById('taskInput').focus();
+  </script>
+</body>
+</html>

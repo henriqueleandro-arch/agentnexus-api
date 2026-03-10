@@ -1,4 +1,4 @@
-// qwen.js â Qwen AI integration via Alibaba Cloud Model Studio (DashScope)
+// qwen.js — Qwen AI integration via Alibaba Cloud Model Studio (DashScope)
 const OpenAI = require("openai");
 
 let client = null;
@@ -29,7 +29,7 @@ async function analyzeAgentPerformance(context) {
   const systemPrompt = `You are an AI operations analyst for AgentNexus, a multi-tenant AI agent orchestration platform running on TiDB Cloud.
 You are analyzing data for a specific agent that has been assigned a task.
 Focus your analysis on the assigned agent and how it relates to the task given.
-Use the actual data provided â reference real agent names, real numbers, real tool names.
+Use the actual data provided — reference real agent names, real numbers, real tool names.
 Respond ONLY with valid JSON in this exact format:
 {
   "summary": "Brief assessment focused on the assigned agent and task (1-2 sentences)",
@@ -129,23 +129,23 @@ function generateMockAnalysis(context) {
   return {
     summary: `${agentName} (${agentType}) has ${selfSessions} sessions with ${selfRate}% success rate. ${worstAgent.name} has the highest failure rate at ${(worstAgent.rate * 100).toFixed(0)}%, while ${slowestTool.name} is the slowest tool at ${slowestTool.dur}ms avg.`,
     top_issues: [
-      `${worstAgent.name} failure rate is ${(worstAgent.rate * 100).toFixed(0)}% â investigate error logs`,
-      `${slowestTool.name} averages ${slowestTool.dur}ms per call â consider caching or batching`,
-      `${busiestTool.name} is the most-called tool (${busiestTool.count} calls) â ensure it scales`,
+      `${worstAgent.name} failure rate is ${(worstAgent.rate * 100).toFixed(0)}% — investigate error logs`,
+      `${slowestTool.name} averages ${slowestTool.dur}ms per call — consider caching or batching`,
+      `${busiestTool.name} is the most-called tool (${busiestTool.count} calls) — ensure it scales`,
     ],
     recommendations: [
       { agent: worstAgent.name, action: `Review failed session logs and add retry logic for ${worstAgent.type} tasks`, priority: "high" },
-      { agent: agentName, action: selfFailed > 0 ? "Add error handling and retry mechanisms" : "Performance is strong â use as template for other agents", priority: selfFailed > 0 ? "high" : "low" },
+      { agent: agentName, action: selfFailed > 0 ? "Add error handling and retry mechanisms" : "Performance is strong — use as template for other agents", priority: selfFailed > 0 ? "high" : "low" },
     ],
     tool_optimization: [
       { tool: slowestTool.name, suggestion: `At ${slowestTool.dur}ms avg, consider adding result caching` },
-      { tool: busiestTool.name, suggestion: `High call volume (${busiestTool.count}) â add batch mode support` },
+      { tool: busiestTool.name, suggestion: `High call volume (${busiestTool.count}) — add batch mode support` },
     ],
   };
 }
 
 /**
- * Execute a task as the agent â the agent actually responds to the user's request.
+ * Execute a task as the agent — the agent actually responds to the user's request.
  * This is the Manus-like behavior: the agent uses its capabilities to perform the task.
  */
 async function executeAgentTask(agent, task) {
@@ -174,7 +174,7 @@ Do NOT mention that you are an AI model. Act as the specialized agent you are.`;
     console.warn(`[Qwen] Agent task execution failed (${err.message.substring(0, 100)})`);
     return {
       success: false,
-      response: `[${agent.name} could not complete this task â DashScope API unavailable]`,
+      response: `[${agent.name} could not complete this task — DashScope API unavailable]`,
       _source: "fallback",
     };
   }

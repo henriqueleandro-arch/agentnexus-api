@@ -1,4 +1,4 @@
-// middleware.js â Tenant isolation and RBAC
+// middleware.js — Tenant isolation and RBAC
 
 /**
  * Extract tenant ID from the X-Tenant-ID header.
