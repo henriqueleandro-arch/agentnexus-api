@@ -43,7 +43,7 @@ app.get("/api/info", (req, res) => {
 app.use("/api", routes);
 
 // ─── Start ───────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 AgentNexus API running on http://localhost:${PORT}`);
   console.log(`   TiDB:  ${process.env.TIDB_HOST}:${process.env.TIDB_PORT}`);
   console.log(`   Qwen:  ${process.env.QWEN_MODEL} via ${process.env.DASHSCOPE_BASE_URL}`);
