@@ -6,7 +6,7 @@ let client = null;
 function getClient() {
   if (!client) {
     client = new OpenAI({
-      apiKey: process.env.DASHSCOPE_API_KEY || "sk-placeholder",
+      apiKey: process.env.DASHSCOPE_API_KEY,
       baseURL:
         process.env.DASHSCOPE_BASE_URL ||
         "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
@@ -16,14 +16,14 @@ function getClient() {
 }
 
 /**
- * Analyze agent performance data using local Qwen via Ollama.
+ * Analyze agent performance data using Qwen-Plus via DashScope (Alibaba Cloud).
  *
  * Pipeline:
  * 1. Receive structured context (already queried from TiDB)
- * 2. Send to local Qwen model
+ * 2. Send to Qwen-Plus model via DashScope international endpoint
  * 3. Parse the JSON response
  *
- * Falls back to mock analysis if Ollama is unavailable.
+ * Falls back to mock analysis if DashScope API is unavailable.
  */
 async function analyzeAgentPerformance(context) {
   const systemPrompt = `You are an AI operations analyst for AgentNexus, a multi-tenant AI agent orchestration platform running on TiDB Cloud.
@@ -94,7 +94,7 @@ Respond with JSON only. No thinking, no explanation, just the JSON object.`;
 }
 
 /**
- * Fallback mock analysis when Ollama is unavailable.
+ * Fallback mock analysis when DashScope API is unavailable.
  */
 function generateMockAnalysis(context) {
   const agents = context.agent_performance || [];
