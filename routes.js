@@ -321,6 +321,10 @@ router.post("/execute", async (req, res) => {
   const { agent_id, task } = req.body;
   if (!agent_id || !task) return res.status(400).json({ error: "agent_id and task are required" });
 
+  // Extend timeout for long-running SSE streams (5 minutes)
+  req.setTimeout(300000);
+  res.setTimeout(300000);
+
   // Set up SSE
   res.writeHead(200, {
     "X-Accel-Buffering": "no",
