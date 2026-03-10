@@ -468,6 +468,104 @@
       0%, 80%, 100% { transform: scale(0); }
       40% { transform: scale(1); }
     }
+
+    /* ── Hamburger menu button (hidden on desktop) ── */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      color: var(--text);
+    }
+    .hamburger:hover { background: var(--bg); }
+    .hamburger svg { width: 22px; height: 22px; display: block; }
+
+    /* ── Mobile overlay ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 90;
+    }
+    .sidebar-overlay.active { display: block; }
+
+    /* ── Mobile Responsive ── */
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 0 16px;
+        height: 50px;
+      }
+      .topbar h1 { font-size: 15px; }
+      .topbar-right .tech-tag { display: none; }
+      .topbar-right { gap: 8px; }
+      .tenant-pill { padding: 5px 10px; font-size: 12px; }
+      .tenant-pill select { font-size: 12px; }
+      .hamburger { display: flex; align-items: center; justify-content: center; }
+
+      .main { position: relative; }
+
+      .agents-panel {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: 280px;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: none;
+      }
+      .agents-panel.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+      }
+
+      .execution-log { padding: 16px; }
+      .input-bar { padding: 12px 16px 16px; }
+      .input-row { padding: 4px 4px 4px 12px; }
+      .input-row input { font-size: 16px; } /* prevents iOS zoom on focus */
+      .send-btn { width: 36px; height: 36px; }
+
+      .welcome .icon { font-size: 36px; }
+      .welcome h3 { font-size: 16px; }
+      .welcome p { font-size: 13px; max-width: 300px; }
+
+      .task-header { flex-wrap: wrap; gap: 6px; }
+      .task-header .task-text { font-size: 14px; flex-basis: 100%; order: 3; }
+
+      .exec-item { gap: 10px; }
+      .exec-step-indicator { width: 28px; height: 28px; font-size: 12px; }
+      .exec-data { font-size: 11px; padding: 10px; max-height: 200px; }
+      .exec-result { padding: 14px; }
+
+      .info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .info-box .val { font-size: 18px; }
+      .info-box .lbl { font-size: 10px; }
+
+      /* HTAP comparison boxes stack on mobile */
+      .demo-card [style*="grid-template-columns: 1fr 1fr"],
+      .demo-card [style*="grid-template-columns:1fr 1fr"] {
+        display: flex !important;
+        flex-direction: column !important;
+      }
+
+      .demo-card table { font-size: 12px; }
+      .demo-card td { padding: 6px 6px; }
+      .demo-card th { padding: 4px 6px; font-size: 10px; }
+
+      .sql-hint { font-size: 9px; padding: 6px 8px; }
+
+      .divider { margin: 16px 0; }
+    }
+
+    @media (max-width: 380px) {
+      .topbar { padding: 0 12px; }
+      .tenant-pill select { max-width: 90px; }
+      .execution-log { padding: 12px; }
+      .input-bar { padding: 10px 12px 14px; }
+      .info-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -475,6 +573,13 @@
   <!-- Top Bar -->
   <div class="topbar">
     <div class="topbar-left">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
       <div class="logo">N</div>
       <h1>AgentNexus</h1>
     </div>
@@ -496,8 +601,10 @@
   </div>
 
   <div class="main">
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
     <!-- Agent Picker -->
-    <div class="agents-panel">
+    <div class="agents-panel" id="agentsPanel">
       <div class="agents-title">Select Agent</div>
       <div class="agents-list" id="agentsList">
         <div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">
@@ -566,6 +673,23 @@
 
     const h = () => ({ 'X-Tenant-ID': tenant, 'Content-Type': 'application/json' });
 
+    // ── Mobile sidebar toggle ──
+    function toggleSidebar() {
+      const panel = document.getElementById('agentsPanel');
+      const overlay = document.getElementById('sidebarOverlay');
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+
+    // Close sidebar when an agent is selected on mobile
+    function closeSidebarIfMobile() {
+      if (window.innerWidth <= 768) {
+        document.getElementById('agentsPanel').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+      }
+    }
+
     function switchTenant() {
       tenant = document.getElementById('tenantSelect').value;
       loadAgents();
@@ -618,6 +742,7 @@
       selectedAgent = agent;
       document.getElementById('selectedAgentName').textContent = agent.name;
       renderAgents();
+      closeSidebarIfMobile();
       document.getElementById('taskInput').focus();
     }
 
