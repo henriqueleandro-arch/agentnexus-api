@@ -96,7 +96,7 @@ Key changes:
 **Solution:** Converted the NAT public IP to an Elastic IP (EIP) using:
 
 ```bash
-aliyun ecs ConvertNatPublicIpToEip --RegionId us-east-1 --InstanceId i-0xi0xrlk64762uprf65m
+aliyun ecs ConvertNatPublicIpToEip --RegionId us-east-1 --InstanceId <your-instance-id>
 ```
 
 This preserves the same IP address but changes its management model to a dedicated EIP with its own bandwidth allocation and more reliable inbound routing.
@@ -111,7 +111,7 @@ This preserves the same IP address but changes its management model to a dedicat
 
 **Issue:** The Express server was only accessible from `localhost` on the ECS, not from external IPs.
 
-**Root Cause:** The default `app.listen(PORT)` in Node.js/Express binds to `127.0.0.1` (localhost only) on some environments. Traffic arriving at the instance's private IP (172.16.10.27) or public IP was rejected because the server wasn't listening on those interfaces.
+**Root Cause:** The default `app.listen(PORT)` in Node.js/Express binds to `127.0.0.1` (localhost only) on some environments. Traffic arriving at the instance's private IP (172.16.x.x) or public IP was rejected because the server wasn't listening on those interfaces.
 
 **Solution:** Explicitly bind to all interfaces:
 

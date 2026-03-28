@@ -196,7 +196,7 @@ router.post("/insights/generate", async (req, res) => {
     });
   } catch (err) {
     console.error(`[Qwen] Error for ${req.tenantId}:`, err.message);
-    res.status(500).json({ error: err.message, hint: "Check DASHSCOPE_API_KEY in .env" });
+    res.status(500).json({ error: "AI insight generation failed" });
   }
 });
 

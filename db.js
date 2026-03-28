@@ -24,6 +24,9 @@ function getPool() {
  * This is the core pattern: every request is tied to a tenant.
  */
 async function tenantQuery(tenantId, sql, params = []) {
+  if (!/^tenant_[a-z0-9_]+$/.test(tenantId)) {
+    throw new Error("Invalid tenant ID");
+  }
   const conn = await getPool().getConnection();
   try {
     await conn.query(`USE \`${tenantId}\``);
